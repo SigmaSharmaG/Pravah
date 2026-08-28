@@ -10,7 +10,7 @@ pydantic-settings
 # GIS / Geospatial
 # ==============================
 geopandas
-pyrosm
+# pyrosm
 shapely
 pyproj
 fiona
