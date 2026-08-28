@@ -9,25 +9,33 @@ pydantic-settings
 # ==============================
 # GIS / Geospatial
 # ==============================
+<<<<<<< HEAD
 geopandas
 # pyrosm
 shapely
 pyproj
 fiona
+=======
+#geopandas
+#pyrosm
+#shapely
+#pyproj
+#fiona
+>>>>>>> 7e81b01 (feat: added the basic routers, main.py and api routers - setup the road_segments model and its schema)
 
 # ==============================
 # Graph / Routing
 # ==============================
-networkx
+#networkx
 
 # ==============================
 # Machine Learning / Data Science
 # ==============================
-scikit-learn
-xgboost
-pandas
-numpy
-joblib
+#scikit-learn
+#xgboost
+#pandas
+#numpy
+#joblib
 
 # ==============================
 # External APIs
@@ -50,8 +58,8 @@ python-dotenv
 # ==============================
 # Jupyter / Notebooks
 # ==============================
-jupyterlab
-ipykernel
+#jupyterlab
+#ipykernel
 
 # ==============================
 # Testing
