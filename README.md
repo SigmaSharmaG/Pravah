@@ -52,42 +52,95 @@ PRAVAH-NER aims to make routing decisions based not only on distance or travel t
 PRAVAH-NER follows a risk-aware logistics pipeline:
 
 ```text
-                    ┌──────────────────┐
-                    │  Road Network    │
-                    │ OpenStreetMap    │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                 ┌──────────────────────┐
-                 │ Weather & Incidents  │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │   Risk Prediction    │
-                 │      ML Model        │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Road Accessibility   │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │ Dynamic Edge Cost    │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │    Dijkstra / A*     │
-                 │  Route Optimization  │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │    ETA / Delay       │
-                 └──────────────────────┘
+                         ┌─────────────────────────┐
+                         │       DATA SOURCES       │
+                         │                         │
+                         │ Weather / Rainfall      │
+                         │ Flood Data              │
+                         │ Landslide Data          │
+                         │ Road / Bridge Status    │
+                         │ Historical Incidents    │
+                         │ GPS / Vehicle Data      │
+                         │ Emergency Reports       │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │    DATA INGESTION       │
+                         │                         │
+                         │ API connectors          │
+                         │ Event ingestion         │
+                         │ Validation              │
+                         │ Retry / failure handling│
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │   DATA NORMALIZATION    │
+                         │                         │
+                         │ Common road IDs         │
+                         │ GPS → road segments     │
+                         │ Timestamps              │
+                         │ Source confidence       │
+                         └────────────┬────────────┘
+                                      │
+                    ┌─────────────────┴─────────────────┐
+                    ▼                                   ▼
+        ┌──────────────────────┐             ┌──────────────────────┐
+        │      AI / ML         │             │    LIVE EVENTS       │
+        │                      │             │                      │
+        │ Blockage Prediction  │             │ Road blocked         │
+        │ Flood Risk           │             │ Bridge damaged       │
+        │ Landslide Risk       │             │ Flood reported       │
+        │                      │             │ Emergency alert      │
+        └──────────┬───────────┘             └──────────┬───────────┘
+                   │                                    │
+                   └────────────────┬───────────────────┘
+                                    ▼
+                         ┌─────────────────────────┐
+                         │    ROAD RISK ENGINE     │
+                         │                         │
+                         │ Risk Score               │
+                         │ Confidence               │
+                         │ Freshness                │
+                         │ Historical vulnerability │
+                         │ Live incidents           │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │    RISK-AWARE GRAPH     │
+                         │                         │
+                         │ Nodes = locations       │
+                         │ Edges = road segments   │
+                         │ Edge weight = dynamic    │
+                         │              risk/cost   │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │     ROUTING ENGINE      │
+                         │                         │
+                         │ Dijkstra / A*           │
+                         │ OSRM / GraphHopper      │
+                         │ Alternative routes      │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │   ROUTE RECOMMENDER     │
+                         │                         │
+                         │ Safest feasible route   │
+                         │ ETA                     │
+                         │ Risk                    │
+                         │ Confidence              │
+                         │ Explanation             │
+                         └────────────┬────────────┘
+                                      │
+                       ┌──────────────┼──────────────┐
+                       ▼              ▼              ▼
+                  Dispatcher       Driver       Emergency
+                  Dashboard         App          Operations
 ```
 
 ---
@@ -257,29 +310,219 @@ The web dashboard is designed to provide centralized visibility of:
 # System Architecture
 
 ```text
-                         PRAVAH-NER
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-     Frontend              Backend                 ML
-        │                     │                     │
-   React + MapLibre        FastAPI             Risk Model
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              │
-                         Data Layer
-                              │
-          ┌───────────────────┼───────────────────┐
-          │                   │                   │
-          ▼                   ▼                   ▼
-     Road Network          Weather            Incidents
-     OpenStreetMap           API             Field Reports
-          │                   │                   │
-          └───────────────────┼───────────────────┘
-                              │
-                              ▼
-                       PostgreSQL/PostGIS
+                    USER
+                     │
+                     │
+                  SHIPMENT
+                     │
+                     ▼
+                ROUTE_REQUEST
+                     │
+                     ▼
+              ROUTE_RECOMMENDATION
+                     │
+                     │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+    ROAD_SEGMENT            ALERT
+          │
+     ┌────┴─────┐
+     ▼          ▼
+RISK_PREDICTION INCIDENT
+```
+
+
+## Risk Model
+
+```text
+              WEATHER
+                 │
+       ┌─────────┼─────────┐
+       ↓         ↓         ↓
+    Rainfall   Flood     Forecast
+       │         │         │
+       └─────────┼─────────┘
+                 ↓
+          ┌─────────────┐
+          │             │
+HISTORY → │  ML MODEL   │ ← GEOLOGY
+          │             │
+          └──────┬──────┘
+                 ↓
+       Blockage Probability
+                 │
+                 ▼
+       ┌──────────────────┐
+       │   RISK ENGINE    │
+       │                  │
+       │ ML prediction    │
+       │ Live incidents   │
+       │ Historical risk  │
+       │ Road condition   │
+       │ Data freshness   │
+       └────────┬─────────┘
+                ↓
+          RISK SCORE
+                +
+          CONFIDENCE
+                ↓
+        Road Classification
+                │
+        ┌───────┼────────┐
+        ↓       ↓        ↓
+       LOW    HIGH    CRITICAL
+```
+
+## Routing Architecture
+
+```text
+             Road Network
+                  │
+                  ▼
+            Base Graph
+                  │
+                  +
+        Dynamic Risk Weights
+                  │
+                  ▼
+          Risk-Aware Graph
+                  │
+                  ▼
+            Routing Engine
+             /          \
+            /            \
+       Dijkstra           A*
+            \             /
+             \           /
+              ▼         ▼
+             Candidate Routes
+                    │
+                    ▼
+             Route Evaluator
+                    │
+                    ▼
+          Best Feasible Route
+```
+
+## Mission Aware Routing
+
+```text
+                    SHIPMENT
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+         Cargo Type           Priority
+             │                   │
+       ┌─────┴─────┐             │
+       ↓           ↓             ↓
+    Medicine      Food       Emergency
+       │           │             │
+       └───────────┼─────────────┘
+                   ↓
+             Route Policy
+                   │
+                   ↓
+           Risk Weight (β)
+                   │
+                   ↓
+             Route Engine
+```
+
+## Fault Tolerant System
+
+```text
+                  DATA SOURCE
+                      │
+                      ▼
+                Data Ingestion
+                      │
+                 ┌────┴────┐
+                 │         │
+               SUCCESS    FAILURE
+                 │         │
+                 ↓         ↓
+              Fresh     Retry
+                 │         │
+                 │      Retry exhausted
+                 │         │
+                 │         ▼
+                 │    Last Known Data
+                 │         │
+                 └────┬────┘
+                      ↓
+                 Risk Engine
+                      │
+                      ▼
+               Confidence Check
+                      │
+          ┌───────────┼───────────┐
+          ↓           ↓           ↓
+        HIGH        MEDIUM        LOW
+      confidence   confidence   confidence
+          │           │           │
+          ↓           ↓           ↓
+       Normal      Cautious     Degraded
+       routing     routing      routing
+                                  │
+                                  ↓
+                            Human Warning
+```
+
+## Backend - ML Contract
+```text
+{
+  "road_segment_id": "SEG_18291",
+  "blockage_probability": 0.82,
+  "flood_probability": 0.64,
+  "landslide_probability": 0.31,
+  "confidence": 0.91,
+  "prediction_horizon_hours": 6,
+  "model_version": "blockage-v1.0",
+  "predicted_at": "2026-08-28T10:30:00Z"
+}
+```  
+
+## Realtime event Flow
+```text
+             External Source
+                   │
+                   ▼
+             Event Ingestion
+                   │
+                   ▼
+              Validation
+                   │
+                   ▼
+             Normalization
+                   │
+                   ▼
+              Event Store
+                   │
+                   ▼
+             Risk Engine
+                   │
+                   ▼
+         Update Road Segment
+                   │
+                   ▼
+             Route Recheck
+                   │
+             ┌─────┴─────┐
+             │           │
+          Route OK    Route Unsafe
+             │           │
+             │           ▼
+             │       Recalculate
+             │           │
+             │           ▼
+             │      New Route
+             │           │
+             └─────┬─────┘
+                   ↓
+                Alert
+                   │
+                   ▼
+              Dispatcher
 ```
 
 ---
@@ -389,6 +632,40 @@ The model produces a disruption probability:
 ```
 
 ---
+
+### Route Response Shape
+
+```text
+{
+  "route_id": "RT_10291",
+  "origin": "Guwahati",
+  "destination": "Imphal",
+
+  "recommended_route": {
+    "distance_km": 284,
+    "eta_minutes": 390,
+    "risk_score": 0.14,
+    "confidence": 0.91
+  },
+
+  "alternatives": [
+    {
+      "distance_km": 241,
+      "eta_minutes": 320,
+      "risk_score": 0.79,
+      "status": "HIGH_RISK"
+    }
+  ],
+
+  "reason": [
+    "Heavy rainfall detected",
+    "High blockage probability on NH segment",
+    "Alternative route has lower predicted risk"
+  ],
+
+  "data_freshness": "2 minutes"
+}
+```
 
 # Technology Stack
 
