@@ -9,13 +9,11 @@ pydantic-settings
 # ==============================
 # GIS / Geospatial
 # ==============================
-osmnx
 geopandas
-#pyrosm
+# pyrosm
 shapely
-#pyproj
-#fiona
-
+pyproj
+fiona
 
 # ==============================
 # Graph / Routing
@@ -65,10 +63,3 @@ pytest-asyncio
 # Code Quality
 # ==============================
 ruff
-
-
-# =============================
-# Others
-# =============================
-psycopg2-binary
-psycopg2
