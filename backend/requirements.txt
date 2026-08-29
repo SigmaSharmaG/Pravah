@@ -1,0 +1,74 @@
+# ==============================
+# Backend / API
+# ==============================
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+
+# ==============================
+# GIS / Geospatial
+# ==============================
+osmnx
+geopandas
+#pyrosm
+shapely
+#pyproj
+#fiona
+
+
+# ==============================
+# Graph / Routing
+# ==============================
+#networkx
+
+# ==============================
+# Machine Learning / Data Science
+# ==============================
+#scikit-learn
+#xgboost
+#pandas
+#numpy
+#joblib
+
+# ==============================
+# External APIs
+# ==============================
+httpx
+
+# ==============================
+# Database
+# ==============================
+sqlalchemy
+asyncpg
+geoalchemy2
+alembic
+
+# ==============================
+# Environment / Configuration
+# ==============================
+python-dotenv
+
+# ==============================
+# Jupyter / Notebooks
+# ==============================
+#jupyterlab
+#ipykernel
+
+# ==============================
+# Testing
+# ==============================
+pytest
+pytest-asyncio
+
+# ==============================
+# Code Quality
+# ==============================
+ruff
+
+
+# =============================
+# Others
+# =============================
+psycopg2-binary
+psycopg2

@@ -6,7 +6,11 @@ class RoadSegment(Base):
     __tablename__ = "road_segments"
 
     id = Column(Integer, primary_key=True, index=True)
+<<<<<<< HEAD
     osm_id = Column(String, unique=True, index=True)
+=======
+    osm_id = Column(String, index=True)
+>>>>>>> backend
     name = Column(String, nullable=True)
     road_type = Column(String)  # e.g., 'primary', 'secondary', 'residential'
     length_m = Column(Float)
