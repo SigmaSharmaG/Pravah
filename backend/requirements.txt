@@ -18,16 +18,16 @@ fiona
 # ==============================
 # Graph / Routing
 # ==============================
-networkx
+#networkx
 
 # ==============================
 # Machine Learning / Data Science
 # ==============================
-scikit-learn
-xgboost
-pandas
-numpy
-joblib
+#scikit-learn
+#xgboost
+#pandas
+#numpy
+#joblib
 
 # ==============================
 # External APIs
@@ -50,8 +50,8 @@ python-dotenv
 # ==============================
 # Jupyter / Notebooks
 # ==============================
-jupyterlab
-ipykernel
+#jupyterlab
+#ipykernel
 
 # ==============================
 # Testing
