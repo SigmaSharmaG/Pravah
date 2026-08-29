@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.api.v1.router import api_router
 from app.db.database import engine
-from app.models import road #, shipment  # import models so Base can create tables
+from app.models import road, incident #, shipment  # import models so Base can create tables
 
 # Create tables (for dev; we'll use Alembic later)
 road.Base.metadata.create_all(bind=engine)
