@@ -47,6 +47,9 @@ def recommend_route_for_shipment(db: Session, shipment_id: int):
     if path_nodes is None or path_segments is None or len(path_segments) == 0:
         return None
 
+    if any(graph.segment_info[sid]['risk_score'] > 0.8 for sid in path_segments):
+        return None
+
     # Fetch road segment details
     segments = db.query(RoadSegment).filter(RoadSegment.id.in_(path_segments)).all()
     seg_map = {s.id: s for s in segments}

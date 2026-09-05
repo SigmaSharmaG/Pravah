@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from app.models.road import RoadSegment
+from app.models.incident import Incident
 from app.integrations.ml.mock_predictor import mock_predictor
 from app.services.risk.risk_engine import assess_risk
-from app.models.incident import Incident
 from app.services.routing.graph import RoadGraph
 
 def build_risk_graph(db: Session) -> RoadGraph:
@@ -11,13 +11,18 @@ def build_risk_graph(db: Session) -> RoadGraph:
     if not segments:
         return graph
 
-    # Precompute risk per segment ID
+    # Precompute risk per segment ID (including incidents)
     risk_map = {}
     for seg in segments:
         incidents = db.query(Incident).filter(Incident.road_segment_id == seg.id).all()
         incident_dicts = [
-            {"type": i.type, "severity": i.severity, "source": i.source, "verified": i.verified}
-            for i in incidents
+            {
+                "type": inc.type,
+                "severity": inc.severity,
+                "source": inc.source,
+                "verified": inc.verified
+            }
+            for inc in incidents
         ]
         prediction = mock_predictor.predict(seg.id, seg.slope, seg.elevation)
         assessment = assess_risk(seg.id, prediction, incident_dicts)
