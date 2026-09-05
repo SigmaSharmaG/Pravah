@@ -1,13 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List, Optional
 from app.db.database import get_db
-from app.models.shipment import Shipment as ShipmentModel   # SQLAlchemy model
-from app.schemas.shipment import ShipmentCreate, Shipment    # Pydantic schemas
+from app.models.shipment import Shipment as ShipmentModel
+from app.schemas.shipment import ShipmentCreate, Shipment
+from app.schemas.update_schemas import ShipmentUpdate
 from app.services.routing.routing_service import recommend_route_for_shipment
 from app.schemas.route_recommendation import RouteRecommendation
 from app.services.routing.geocoding import geocode_place_name
 
 router = APIRouter()
+
 
 @router.post("/", response_model=Shipment, status_code=201)
 def create_shipment(shipment: ShipmentCreate, db: Session = Depends(get_db)):
@@ -22,9 +25,9 @@ def create_shipment(shipment: ShipmentCreate, db: Session = Depends(get_db)):
         data['origin_lat'] = lat
         data['origin_lon'] = lon
         if node_id is not None:
-            data['origin_node'] = node_id   # override any provided value
+            data['origin_node'] = node_id
         else:
-            data['origin_node'] = None      # will be found later via coordinates
+            data['origin_node'] = None
 
     # Geocode destination if name provided
     if data.get('destination_name'):
@@ -58,12 +61,41 @@ def create_shipment(shipment: ShipmentCreate, db: Session = Depends(get_db)):
     return db_shipment
 
 
+@router.get("/", response_model=List[Shipment])
+def list_shipments(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return db.query(ShipmentModel).offset(skip).limit(limit).all()
+
+
 @router.get("/{shipment_id}", response_model=Shipment)
 def get_shipment(shipment_id: int, db: Session = Depends(get_db)):
     shipment = db.query(ShipmentModel).filter(ShipmentModel.id == shipment_id).first()
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
     return shipment
+
+
+@router.patch("/{shipment_id}", response_model=Shipment)
+def update_shipment(shipment_id: int, update_data: ShipmentUpdate, db: Session = Depends(get_db)):
+    shipment = db.query(ShipmentModel).filter(ShipmentModel.id == shipment_id).first()
+    if not shipment:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    for field, value in update_data.dict(exclude_unset=True).items():
+        setattr(shipment, field, value)
+    db.commit()
+    db.refresh(shipment)
+    return shipment
+
+
+@router.delete("/{shipment_id}", status_code=204)
+def delete_shipment(shipment_id: int, db: Session = Depends(get_db)):
+    shipment = db.query(ShipmentModel).filter(ShipmentModel.id == shipment_id).first()
+    if not shipment:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+    # Soft delete: set status to cancelled
+    shipment.status = 'cancelled'
+    db.commit()
+    return None
+
 
 @router.post("/{shipment_id}/reroute", response_model=RouteRecommendation)
 def reroute_shipment(shipment_id: int, db: Session = Depends(get_db)):
