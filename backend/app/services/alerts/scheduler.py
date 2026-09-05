@@ -16,3 +16,4 @@ def start_alert_monitor(interval_seconds=30):
 
     thread = threading.Thread(target=monitor_loop, daemon=True)
     thread.start()
+    print("Alert monitor started.")

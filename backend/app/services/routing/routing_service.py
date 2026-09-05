@@ -4,6 +4,7 @@ from app.models.road import RoadSegment
 from app.models.route_recommendation import RouteRecommendation
 from app.services.routing.graph_builder import build_risk_graph
 from app.services.routing.geocoding import find_nearest_node
+from app.core.enums import ShipmentPriority
 
 
 def recommend_route_for_shipment(db: Session, shipment_id: int):
@@ -13,9 +14,9 @@ def recommend_route_for_shipment(db: Session, shipment_id: int):
 
     # Determine risk penalty based on shipment priority
     priority_penalty_map = {
-        'critical': 10.0,
-        'high': 5.0,
-        'normal': 1.0
+    ShipmentPriority.critical: 10.0,
+    ShipmentPriority.high: 5.0,
+    ShipmentPriority.normal: 1.0
     }
     risk_penalty = priority_penalty_map.get(shipment.priority, 1.0)
 

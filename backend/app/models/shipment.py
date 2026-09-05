@@ -6,14 +6,16 @@ class Shipment(Base):
     __tablename__ = "shipments"
 
     id = Column(Integer, primary_key=True, index=True)
-    origin_lat = Column(Float, nullable=False)
-    origin_lon = Column(Float, nullable=False)
-    destination_lat = Column(Float, nullable=False)
-    destination_lon = Column(Float, nullable=False)
-    origin_node = Column(BigInteger, nullable=True)   # set later by geocoding
+    origin_name = Column(String, nullable=True)
+    destination_name = Column(String, nullable=True)
+    origin_lat = Column(Float, nullable=True)
+    origin_lon = Column(Float, nullable=True)
+    destination_lat = Column(Float, nullable=True)
+    destination_lon = Column(Float, nullable=True)
+    origin_node = Column(BigInteger, nullable=True)
     destination_node = Column(BigInteger, nullable=True)
-    cargo_type = Column(String, nullable=False)       # e.g., 'medicine', 'food', 'commercial'
-    priority = Column(String, nullable=False)          # 'critical', 'high', 'normal'
+    cargo_type = Column(String, nullable=False)
+    priority = Column(String, nullable=False)
     status = Column(String, default='pending')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

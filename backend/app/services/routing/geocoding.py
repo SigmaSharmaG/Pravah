@@ -25,3 +25,20 @@ def find_nearest_node(db: Session, lat: float, lon: float) -> int:
     if nearest_node is None:
         raise ValueError("No road segments found")
     return nearest_node
+
+
+# Local mapping for pilot region: place name -> (lat, lon, node_id)
+PLACE_INFO = {
+    "guwahati": (26.1445, 91.7362, 113),
+    "shillong": (25.5788, 91.8933, 178),
+    "nongpoh": (25.9022, 91.8811, 1538),   # example, adjust as needed
+    "jowai": (25.3000, 92.1500, None),      # if no node known, set None
+    # Add more places and node IDs from your valid nodes list
+}
+
+def geocode_place_name(name: str):
+    """Return (lat, lon, node_id) for a given place name, or None if not found."""
+    if not name:
+        return None
+    key = name.strip().lower()
+    return PLACE_INFO.get(key)

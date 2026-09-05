@@ -3,10 +3,22 @@ from app.api.v1.router import api_router
 from app.db.database import engine, Base
 from app.models import road, incident, shipment, route_recommendation, alert  # import all models
 from app.services.alerts.scheduler import start_alert_monitor
+from app.core.exceptions import add_exception_handlers
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Pravah Logistics Intelligence")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+add_exception_handlers(app)
 
 app.include_router(api_router, prefix="/api/v1")
 

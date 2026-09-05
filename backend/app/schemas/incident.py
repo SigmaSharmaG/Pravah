@@ -1,11 +1,12 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+from app.core.enums import IncidentType, IncidentSeverity
 
 class IncidentBase(BaseModel):
     road_segment_id: int
-    type: str
-    severity: str
+    type: IncidentType
+    severity: IncidentSeverity
     source: str
     description: Optional[str] = None
     verified: bool = False
